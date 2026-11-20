@@ -69,3 +69,7 @@ AGENTS.md
 # ===== Assets derivados de terceiros (Mixamo, Tripo, sons) =====
 assets/
 tools/bin/
+
+.idea
+.vscode
+.claude/
