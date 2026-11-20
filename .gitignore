@@ -1,0 +1,71 @@
+# ===== SEGREDOS (nunca versionar) =====
+aws-key.pem
+*.pem
+*.key
+*.jks
+*.keystore
+*.p12
+.env
+.env.*
+*service_account*.json
+fcm_service_account.json
+android/google-services.json
+known_hosts
+
+# ===== Saídas de build =====
+build/
+releases/
+*.apk
+*.aab
+*.so
+*.o
+*.dbg
+.cxx/
+.gradle/
+local.properties
+
+# ===== Mídia e dados pesados / gerados =====
+videos/
+server.log
+*.log
+worlds/
+e0_worldtest.e0w
+*.ppm
+store/capturas/
+
+# ===== Assets originais de terceiros (licença / tamanho) =====
+import assets/
+import assets/**
+
+# ===== Configuração local de ferramentas / IDE =====
+.claude/settings.local.json
+.claude/.cc-writes/
+.mcp.json
+.idea/
+.vscode/
+.agents/
+*.swp
+.DS_Store
+
+# ===== Artefatos do sandbox (viram /dev/null) =====
+.bashrc
+.bash_profile
+.profile
+.zshrc
+.zprofile
+.gitconfig
+.gitmodules
+.ripgreprc
+.mcp.json
+.gitignore.orig
+__pycache__/
+*.pyc
+
+# ===== Local / internos (IP do servidor, uid de admin) =====
+deploy.env
+CLAUDE.md
+AGENTS.md
+
+# ===== Assets derivados de terceiros (Mixamo, Tripo, sons) =====
+assets/
+tools/bin/

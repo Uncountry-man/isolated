@@ -1,0 +1,27 @@
+Ícones da HUD (assets/icons.e0i, linhas depois dos itens; gerados por tools/make_hud_icons.py)
+Fonte: https://game-icons.net — licença CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+Autores: Lorc, Delapouite, Skoll, Zeromancer, Sbed (ícones: battle-axe, war-pick, fist, grab, hammer-nails, backpack, anvil-impact,
+sailboat, exit-door, ship-wheel, pirate-cannon, open-chest, heart-plus, lift, coconuts, heart-inside, coins, speedometer,
+back-forth, drop-weapon, rolled-cloth, treasure-map, run, photo-camera; LOJA: shop, pirate-hat, parrot-head, eyepatch,
+bandana, id-card, galleon, pirate-flag, skull-crossed-bones, coins-pile, ghost, crossed-sabres, locked-chest, pirate-coat,
+pirate-captain, crown, cross-mark, health-normal, two-coins, emerald, blunderbuss, crosshair, gunshot, reload-gun-barrel, powder-bag, alarm-clock, compass, chat-bubble). Alterados: recortados/rasterizados em branco com transparência.
+- Figuras da BANDEIRA (game-icons.net, CC BY 3.0): lorc (anchor, dread-skull, crowned-skull, crossed-bones, crossed-swords, octopus,
+  sea-serpent, shark-jaws, raven, hourglass, bleeding-heart, rose, trident, dragon-head, wolf-head, snake, scorpion, sun, moon, barbed-star,
+  lightning-helix, lion, skull-crack, sea-dragon, jellyfish, spiral-shell, sunrise, star-skull, flaming-trident, crow-dive, broken-heart,
+  sword-in-stone, wolf-howl, star-swirl, crescent-blade, skull-bolt, eagle-emblem, claw-slashes, bleeding-eye, evil-moon, reaper-scythe,
+  grim-reaper, tentacles-skull, angler-fish, crab, skeleton-key, ace, hydra, fire-ring, horned-skull, daemon-skull, triple-skulls,
+  harpoon-chain, wave-crest, spider-web) e delapouite (shark-fin, sea-star, whale-tail, sea-turtle, seahorse, mermaid, bat, lighthouse,
+  sinking-ship). Mesmo tratamento: rasterizados em branco com transparência.
+(O pacote Kenney Game Icons, CC0, foi avaliado mas não usado: só tem ícones genéricos de UI.)
+
+MENU PRINCIPAL
+- Fonte "Pirata One" (titulo) e "Cinzel" (menus): SIL Open Font License 1.1 (Google Fonts). Arquivos em tools/fonts/.
+- Icones Discord, YouTube, Instagram e TikTok: Simple Icons (CC0 1.0). Arquivos em tools/icon/social/. Sao marcas de seus respectivos donos.
+
+PERSONAGENS (piratas semi-realistas)
+- Corpo e rosto: "Cowboy" (homem) e "Cowgirl" (mulher), de mastjie - licenca CC0 1.0. https://poly.pizza (modelos S8hq7LEXTT e bB93W7ZTmG).
+- Arquivos originais em "import assets/pirate_kit/". Alterados por tools/export_pirates.py: chapeu removido e cabeca fechada com cabelo,
+  malha subdividida, roupa repintada (paleta nova), olhos/sobrancelhas/barba acrescentados, malha ajustada ao esqueleto do Y Bot, pesos de
+  pele copiados do Y Bot, LODs.
+- Esqueleto e animacoes: Y Bot / Mixamo (Adobe).
+- (Tambem ficaram na pasta, sem uso: "Pirate" da AliceCassie, "Pirate"/"Pirate Woman" do Polygonal Mind e Anne/Henry/Captain do Quaternius, todos CC0.)

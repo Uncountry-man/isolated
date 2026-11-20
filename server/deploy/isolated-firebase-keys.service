@@ -1,0 +1,7 @@
+[Unit]
+Description=Isolated: baixa as chaves publicas do Firebase (verificacao do idToken)
+After=network-online.target
+[Service]
+Type=oneshot
+User=isolated
+ExecStart=/opt/isolated/bin/fetch_firebase_keys.sh

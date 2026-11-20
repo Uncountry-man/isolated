@@ -1,0 +1,4 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- ícone pequeno e branco da notificação: âncora -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,2a3,3 0,1 0,0.001 6A3,3 0,0 0,12,2zM12,4.2a0.8,0.8 0,1 1,-0.001 1.6A0.8,0.8 0,0 1,12,4.2zM11,8h2v3h3v2h-3v6.9c2.8,-0.4 5,-2.6 5.4,-5.4L16,15l3.2,-3.2L22,15l-1.7,0C19.7,19.4 16.2,22 12,22s-7.7,-2.6 -8.3,-7L2,15l2.8,-3.2L8,15l-1.4,0.5c0.4,2.8 2.6,5 5.4,5.4L11,13H8v-2h3z"/>
+</vector>

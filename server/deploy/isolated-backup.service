@@ -1,0 +1,6 @@
+[Unit]
+Description=Isolated: backup diario dos dados (contas + estado do mundo + mundo)
+[Service]
+Type=oneshot
+User=isolated
+ExecStart=/opt/isolated/bin/backup_data.sh

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.rungo.isolatedMT">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+    <application
+        android:label="Isolated Multiplayer"
+        android:hasCode="true"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:isGame="true"
+        android:appCategory="game">
+        <!-- AdMob: ID do app. Este é o ID de TESTE do Google; trocar pelo real ao publicar (ver CLAUDE.md, seção Monetização) -->
+        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-1741105850242816~8979087060" />
+        <!-- Firebase Cloud Messaging: ícone/canal padrão das notificações e o serviço que as recebe (PushService só existe quando o build tem Firebase) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_notify" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="geral" />
+        <service android:name="com.rungo.isolatedMT.PushService" android:exported="false">
+            <intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT" /></intent-filter>
+        </service>
+        <activity
+            android:name="com.rungo.isolatedMT.GameActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|uiMode|density"
+            android:launchMode="singleTask"
+            android:enableOnBackInvokedCallback="false">
+            <!-- targetSdk 36: sem isto o Android 16 liga o "voltar preditivo" e NÃO entrega mais o KEYCODE_BACK à NativeActivity
+                 (o C++ usa o Voltar para fechar telas/menus). -->
+            <meta-data android:name="android.app.lib_name" android:value="isolated" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

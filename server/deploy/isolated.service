@@ -1,0 +1,18 @@
+# Servidor do jogo Isolated (instalado por deploy_aws.sh). NUNCA use --debug em produção.
+[Unit]
+Description=Isolated game server
+After=network-online.target
+Wants=network-online.target
+[Service]
+User=isolated
+WorkingDirectory=/opt/isolated
+# --data: contas dos jogadores + estado do mundo (persistência); chaves do Firebase em data/firebase_jwk.json (timer isolated-firebase-keys)
+ExecStart=/opt/isolated/server 7777 --data /opt/isolated/data --fcm-cmd /opt/isolated/bin/fcm_send.py
+Restart=always
+RestartSec=3
+LimitNOFILE=65536
+# desligar = SIGTERM: o servidor grava todas as contas e o estado do mundo antes de sair
+KillSignal=SIGTERM
+TimeoutStopSec=60
+[Install]
+WantedBy=multi-user.target
