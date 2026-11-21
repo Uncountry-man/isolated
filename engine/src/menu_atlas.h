@@ -1,7 +1,7 @@
 // GERADO por tools/make_menu.py - nao editar. Retangulos (pixels) dos sprites em assets/menu.e0i.
 #pragma once
 namespace e0 {
-static constexpr int kMenuAtlasW = 2048, kMenuAtlasH = 1744;
+static constexpr int kMenuAtlasW = 2048, kMenuAtlasH = 1856;
 struct MenuSprite { int x, y, w, h; };
 enum MenuSpriteId {
     MS_TITLE,
@@ -79,12 +79,18 @@ enum MenuSpriteId {
     MS_ICON_INSTAGRAM,
     MS_ICON_TIKTOK,
     MS_CREW,
+    MS_LOGIN_EMAIL,
+    MS_ACC_EMAIL,
+    MS_LOGIN_ERR_CRED,
+    MS_LOGIN_ERR_EMAIL,
+    MS_LOGIN_ERR_MANY,
+    MS_LOGIN_ERR_EMPTY,
     MS_COUNT
 };
 static constexpr MenuSprite kMenuSprites[MS_COUNT] = {
     {0, 0, 995, 339},  // TITLE
-    {1205, 983, 782, 67},  // SUBTITLE
-    {924, 1688, 760, 40},  // ORNAMENT
+    {0, 1071, 782, 67},  // SUBTITLE
+    {0, 1810, 760, 40},  // ORNAMENT
     {1647, 0, 321, 119},  // PLAY
     {0, 341, 668, 119},  // CHARACTER
     {670, 341, 848, 119},  // SETTINGS
@@ -102,53 +108,53 @@ static constexpr MenuSprite kMenuSprites[MS_COUNT] = {
     {427, 797, 237, 91},  // V_SOFT
     {666, 797, 240, 91},  // V_STRONG
     {908, 797, 289, 91},  // V_ON
-    {820, 983, 309, 75},  // SOON
+    {1517, 983, 309, 75},  // SOON
     {393, 462, 945, 119},  // INVITE
     {1340, 462, 496, 119},  // CREDITS
     {1437, 583, 473, 110},  // CRED_HEADER
     {1199, 797, 374, 91},  // SET_SERVER
     {1575, 797, 305, 91},  // V_DEFAULT
-    {0, 1071, 206, 67},  // SRV_ONLINE
-    {208, 1071, 224, 67},  // SRV_OFFLINE
-    {434, 1071, 363, 67},  // SRV_CHECK
-    {799, 1071, 352, 67},  // SRV_LOCAL
-    {1153, 1071, 558, 67},  // BAD_ADDR
-    {1713, 1071, 78, 67},  // MS
-    {1696, 1140, 32, 61},  // D0
-    {1730, 1140, 21, 61},  // D1
-    {1753, 1140, 30, 61},  // D2
-    {1785, 1140, 28, 61},  // D3
-    {1815, 1140, 30, 61},  // D4
-    {1847, 1140, 28, 61},  // D5
-    {1877, 1140, 31, 61},  // D6
-    {1910, 1140, 27, 61},  // D7
-    {1939, 1140, 30, 61},  // D8
-    {1971, 1140, 31, 61},  // D9
-    {2004, 1140, 14, 61},  // DDOT
-    {2020, 1140, 14, 61},  // DCOLON
-    {1200, 1630, 122, 54},  // CRED_H0
-    {0, 1209, 877, 59},  // CRED_B0
-    {1324, 1630, 634, 54},  // CRED_H1
-    {0, 1270, 1202, 59},  // CRED_B1
-    {0, 1688, 382, 54},  // CRED_H2
-    {0, 1331, 1399, 59},  // CRED_B2
-    {384, 1688, 173, 54},  // CRED_H3
-    {0, 1392, 896, 59},  // CRED_B3
-    {559, 1688, 363, 54},  // CRED_H4
-    {0, 1453, 1479, 59},  // CRED_B4
-    {1481, 1453, 87, 59},  // VERSION
-    {1131, 983, 72, 72},  // STAR
-    {0, 1140, 993, 67},  // LOGIN_HEAD
+    {784, 1071, 206, 67},  // SRV_ONLINE
+    {992, 1071, 224, 67},  // SRV_OFFLINE
+    {1218, 1071, 363, 67},  // SRV_CHECK
+    {1583, 1071, 352, 67},  // SRV_LOCAL
+    {0, 1140, 558, 67},  // BAD_ADDR
+    {560, 1140, 78, 67},  // MS
+    {804, 1209, 32, 61},  // D0
+    {838, 1209, 21, 61},  // D1
+    {861, 1209, 30, 61},  // D2
+    {893, 1209, 28, 61},  // D3
+    {923, 1209, 30, 61},  // D4
+    {955, 1209, 28, 61},  // D5
+    {985, 1209, 31, 61},  // D6
+    {1018, 1209, 27, 61},  // D7
+    {1047, 1209, 30, 61},  // D8
+    {1079, 1209, 31, 61},  // D9
+    {1112, 1209, 14, 61},  // DDOT
+    {1128, 1209, 14, 61},  // DCOLON
+    {1754, 1696, 122, 54},  // CRED_H0
+    {1144, 1209, 877, 59},  // CRED_B0
+    {0, 1754, 634, 54},  // CRED_H1
+    {0, 1278, 1202, 59},  // CRED_B1
+    {636, 1754, 382, 54},  // CRED_H2
+    {0, 1339, 1399, 59},  // CRED_B2
+    {1020, 1754, 173, 54},  // CRED_H3
+    {0, 1400, 896, 59},  // CRED_B3
+    {1195, 1754, 363, 54},  // CRED_H4
+    {0, 1461, 1479, 59},  // CRED_B4
+    {1481, 1461, 87, 59},  // VERSION
+    {1828, 983, 72, 72},  // STAR
+    {640, 1140, 993, 67},  // LOGIN_HEAD
     {836, 890, 748, 86},  // LOGIN_GOOGLE
     {0, 983, 818, 86},  // LOGIN_GUEST
-    {0, 1514, 1059, 56},  // LOGIN_NOTE
-    {1061, 1514, 329, 56},  // LOGIN_BUSY
-    {0, 1572, 922, 56},  // LOGIN_ERR_CFG
-    {924, 1572, 904, 56},  // LOGIN_ERR
-    {0, 1630, 403, 56},  // LOGIN_CANCEL
-    {405, 1630, 793, 56},  // LOGIN_NET
-    {995, 1140, 277, 67},  // ACC_GUEST
-    {1274, 1140, 420, 67},  // ACC_GOOGLE
+    {0, 1522, 1059, 56},  // LOGIN_NOTE
+    {1061, 1522, 329, 56},  // LOGIN_BUSY
+    {0, 1580, 922, 56},  // LOGIN_ERR_CFG
+    {924, 1580, 904, 56},  // LOGIN_ERR
+    {0, 1638, 403, 56},  // LOGIN_CANCEL
+    {405, 1638, 793, 56},  // LOGIN_NET
+    {1635, 1140, 277, 67},  // ACC_GUEST
+    {0, 1209, 420, 67},  // ACC_GOOGLE
     {0, 890, 262, 91},  // SET_ACCOUNT
     {264, 890, 570, 91},  // V_LOGOUT
     {997, 0, 128, 128},  // G_LOGO
@@ -157,5 +163,11 @@ static constexpr MenuSprite kMenuSprites[MS_COUNT] = {
     {1387, 0, 128, 128},  // ICON_INSTAGRAM
     {1517, 0, 128, 128},  // ICON_TIKTOK
     {0, 583, 629, 119},  // CREW
+    {820, 983, 695, 86},  // LOGIN_EMAIL
+    {422, 1209, 380, 67},  // ACC_EMAIL
+    {1200, 1638, 643, 56},  // LOGIN_ERR_CRED
+    {0, 1696, 362, 56},  // LOGIN_ERR_EMAIL
+    {364, 1696, 821, 56},  // LOGIN_ERR_MANY
+    {1187, 1696, 565, 56},  // LOGIN_ERR_EMPTY
 };
 }  // namespace e0

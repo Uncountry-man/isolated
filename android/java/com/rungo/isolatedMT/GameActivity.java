@@ -84,24 +84,36 @@ public class GameActivity extends NativeActivity {
     }
 
     /** Abre uma caixa de texto (teclado numérico com ponto) com o texto inicial. O resultado sai em takeInputResult(). */
-    public static void showTextInput(final String title, final String initial, final String hint) {
+    public static void showTextInput(final String title, final String initial, final String hint) { showTextInputMode(title, initial, hint, 0); }
+
+    /** Igual a showTextInput, com o tipo do teclado: 0 = número/endereço (ip:porta), 1 = E-MAIL, 2 = SENHA (texto escondido; não corta espaços).
+     *  Usado pelo LOGIN POR E-MAIL do menu (main_menu.cpp). A senha nunca é guardada aqui além do resultado consumido por takeInputResult(). */
+    public static void showTextInputMode(final String title, final String initial, final String hint, final int mode) {
         final GameActivity a = sInst;
         if (a == null) { sInput = "\u0001"; return; }
         sInput = null;
         a.runOnUiThread(new Runnable() {
             @Override public void run() {
                 final EditText et = new EditText(a);
-                et.setKeyListener(DigitsKeyListener.getInstance("0123456789.:"));
-                et.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                if (mode == 1) {
+                    et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                } else if (mode == 2) {
+                    et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                } else {
+                    et.setKeyListener(DigitsKeyListener.getInstance("0123456789.:"));
+                    et.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                }
                 et.setSingleLine(true);
+                // senha escondida: DEPOIS do setSingleLine (ele troca o TransformationMethod e a senha aparecia)
+                if (mode == 2) et.setTransformationMethod(android.text.method.PasswordTransformationMethod.getInstance());
                 et.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_ACTION_DONE);   // paisagem: não cobrir a caixa com o teclado grande
                 et.setHint(title + " - " + hint);   // sem título no diálogo: em paisagem o teclado come o espaço
                 et.setText(initial);
                 et.setSelection(et.getText().length());
-                AlertDialog d = new AlertDialog.Builder(a)
+                final AlertDialog d = new AlertDialog.Builder(a)
                     .setView(et)
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override public void onClick(DialogInterface di, int w) { sInput = et.getText().toString().trim(); }
+                        @Override public void onClick(DialogInterface di, int w) { String t = et.getText().toString(); sInput = mode == 2 ? t : t.trim(); }
                     })
                     .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
                         @Override public void onClick(DialogInterface di, int w) { sInput = "\u0001"; }
@@ -111,6 +123,14 @@ public class GameActivity extends NativeActivity {
                     })
                     .create();
                 d.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+                et.setOnEditorActionListener(new android.widget.TextView.OnEditorActionListener() {   // tecla OK/Enter do teclado = botão OK
+                    @Override public boolean onEditorAction(android.widget.TextView v, int actionId, android.view.KeyEvent e) {
+                        if (e != null && e.getAction() != android.view.KeyEvent.ACTION_DOWN) return true;
+                        android.widget.Button ok = d.getButton(AlertDialog.BUTTON_POSITIVE);
+                        if (ok != null && d.isShowing()) ok.performClick();
+                        return true;
+                    }
+                });
                 d.show();
                 et.requestFocus();
             }

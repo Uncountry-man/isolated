@@ -153,6 +153,16 @@ bool jniShowInput(ANativeActivity* a, const char* title, const std::string& init
     env->CallStaticVoidMethod(c, m, env->NewStringUTF(title), env->NewStringUTF(initial.c_str()), env->NewStringUTF(hint));
     return !env->ExceptionCheck();
 }
+bool jniShowInputMode(ANativeActivity* a, const char* title, const std::string& initial, const char* hint, int mode) {   // 1 e-mail, 2 senha
+    Jni j(a);
+    if (!j.ok) return false;
+    JNIEnv* env = j.env;
+    jclass c = env->GetObjectClass(a->clazz);
+    jmethodID m = env->GetStaticMethodID(c, "showTextInputMode", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+    if (!m) { env->ExceptionClear(); return false; }
+    env->CallStaticVoidMethod(c, m, env->NewStringUTF(title), env->NewStringUTF(initial.c_str()), env->NewStringUTF(hint), (jint)mode);
+    return !env->ExceptionCheck();
+}
 bool jniTakeInput(ANativeActivity* a, std::string& out) {   // true se há resultado ("\x01" = cancelado)
     Jni j(a);
     if (!j.ok) { out = "\x01"; return true; }
@@ -326,6 +336,22 @@ void MainMenu::pollInput() {
     std::string r;
     if (!jniTakeInput(act_, r)) return;
     inputOpen_ = false;
+    if (inputKind_ == 1) {   // LOGIN POR E-MAIL: e-mail digitado -> pede a senha
+        inputKind_ = 0;
+        if (r == "\x01") return;
+        if (r.empty() || r.find('@') == std::string::npos) { loginMessage(r.empty() ? 8 : 6); return; }
+        loginEmail_ = r;
+        if (jniShowInputMode(act_, "Senha", "", "sua senha", 2)) { inputOpen_ = true; inputKind_ = 2; }
+        else { wipe(loginEmail_); loginMessage(2); }
+        return;
+    }
+    if (inputKind_ == 2) {   // senha digitada -> o motor faz o login (Action::LoginEmail)
+        inputKind_ = 0;
+        if (r == "\x01" || r.empty()) { const bool canceled = r == "\x01"; wipe(r); wipe(loginEmail_); if (!canceled) loginMessage(8); return; }
+        loginPass_ = r; wipe(r);
+        loginEmailNow_ = true;
+        return;
+    }
     if (r == "\x01") return;   // cancelado
     if (r.empty()) { opts.server.clear(); }
     else {
@@ -353,6 +379,7 @@ MainMenu::Action MainMenu::poll() {
     if (teamNow_) { teamNow_ = false; return Action::Team; }
     if (loginGoogleNow_) { loginGoogleNow_ = false; return Action::LoginGoogle; }
     if (loginGuestNow_) { loginGuestNow_ = false; return Action::LoginGuest; }
+    if (loginEmailNow_) { loginEmailNow_ = false; return Action::LoginEmail; }
     if (logoutNow_) { logoutNow_ = false; return Action::Logout; }
     if (leaving_ && leaveT_ >= 1.0f) return Action::Play;
     return Action::None;
@@ -509,7 +536,7 @@ void MainMenu::draw(int w, int h) {
         const MenuSprite& vs = kMenuSprites[MS_VERSION];
         sprite(MS_VERSION, w - 44.0f * u - vs.w * 0.8f * u, h - 74.0f * u, 0.8f * u, cream[0], cream[1], cream[2], 0.55f * uiA * pg);
         if (account) {   // conta em uso, no canto inferior direito acima da versão
-            const int accId = account == 2 ? (int)MS_ACC_GOOGLE : (int)MS_ACC_GUEST;
+            const int accId = account == 2 ? (int)MS_ACC_GOOGLE : account == 3 ? (int)MS_ACC_EMAIL : (int)MS_ACC_GUEST;
             const float as = 0.62f * u, aw = kMenuSprites[accId].w * as + (account == 2 ? 50.0f * u : 0.0f);
             const float ax = w - 44.0f * u - aw, ay = h - 128.0f * u, ca = 0.75f * uiA * pg * smooth01((t_ - 0.9f) / 0.6f);
             if (account == 2) sprite(MS_G_LOGO, ax, ay + 2.0f * u, 0.30f * u, 1, 1, 1, ca);
@@ -558,13 +585,13 @@ void MainMenu::draw(int w, int h) {
         spriteC(MS_SUBTITLE, cx, titleY + titleH + 4.0f * u, 0.62f * u, 0.95f, 0.86f, 0.62f, a * smooth01((t_ - 0.5f) / 0.6f));
         spriteC(MS_ORNAMENT, cx, titleY + titleH + 52.0f * u, 0.85f * u, 0.95f, 0.74f, 0.32f, a * 0.9f * smooth01((t_ - 0.6f) / 0.6f));
         const float k0 = smooth01((t_ - 0.45f) / 0.55f), k1 = smooth01((t_ - 0.6f) / 0.55f), k2 = smooth01((t_ - 0.75f) / 0.55f);
-        const float bx = left, bw = 760.0f * u, bh = 108.0f * u, rad = 22.0f * u;
+        const float bx = left, bw = 760.0f * u, bh = 100.0f * u, rad = 22.0f * u;
         // cabeçalho
-        sprite(MS_LOGIN_HEAD, bx + 2.0f * u, 404.0f * u + 3.0f * u, 0.62f * u, 0, 0, 0, 0.6f * a * k0);
-        sprite(MS_LOGIN_HEAD, bx, 404.0f * u, 0.62f * u, cream[0], cream[1], cream[2], 0.9f * a * k0);
+        sprite(MS_LOGIN_HEAD, bx + 2.0f * u, 392.0f * u + 3.0f * u, 0.62f * u, 0, 0, 0, 0.6f * a * k0);
+        sprite(MS_LOGIN_HEAD, bx, 392.0f * u, 0.62f * u, cream[0], cream[1], cream[2], 0.9f * a * k0);
         // ENTRAR COM GOOGLE: botão branco com o "G" colorido (padrão visual do Google)
         {
-            const float y = 470.0f * u + (1.0f - k1) * 30.0f * u, aa = a * k1;
+            const float y = 452.0f * u + (1.0f - k1) * 30.0f * u, aa = a * k1;
             const bool press = pressed_ == HitLoginGoogle, dim = loginBusy_;
             const float sc = press ? 0.985f : 1.0f, ox = bw * (1.0f - sc) * 0.5f, oy = bh * (1.0f - sc) * 0.5f;
             button(bx + 4.0f * u, y + 7.0f * u, bw, bh, 0, 0, 0, 0.40f * aa, 0, 0, 0, 0, rad, 0);
@@ -576,9 +603,22 @@ void MainMenu::draw(int w, int h) {
             sprite(MS_LOGIN_GOOGLE, bx + 40.0f * u + 128.0f * gs + 34.0f * u, y + (bh - s.h * ls) * 0.5f, ls, 0.13f, 0.13f, 0.14f, aa);
             hit_[HitLoginGoogle] = {bx, y, bw, bh}; hitOn_[HitLoginGoogle] = aa > 0.4f && !loginBusy_;
         }
+        // ENTRAR COM E-MAIL: botão escuro com borda creme (pede e-mail e senha em caixas de texto do Android)
+        {
+            const float ke = smooth01((t_ - 0.68f) / 0.55f);
+            const float y = 568.0f * u + (1.0f - ke) * 30.0f * u, aa = a * ke;
+            const bool press = pressed_ == HitLoginEmail;
+            const float sc = press ? 0.985f : 1.0f, ox = bw * (1.0f - sc) * 0.5f, oy = bh * (1.0f - sc) * 0.5f;
+            button(bx + 4.0f * u, y + 7.0f * u, bw, bh, 0, 0, 0, 0.40f * aa, 0, 0, 0, 0, rad, 0);
+            button(bx + ox, y + oy, bw * sc, bh * sc, 0.05f, 0.04f, 0.03f, 0.82f * aa, cream[0], cream[1], cream[2], (press ? 1.0f : 0.75f) * aa, rad, 3.0f * u);
+            const MenuSprite& s = kMenuSprites[MS_LOGIN_EMAIL];
+            const float ls = 0.70f * u;
+            sprite(MS_LOGIN_EMAIL, bx + (bw - s.w * ls) * 0.5f, y + (bh - s.h * ls) * 0.5f, ls, cream[0], cream[1], cream[2], aa);
+            hit_[HitLoginEmail] = {bx, y, bw, bh}; hitOn_[HitLoginEmail] = aa > 0.4f && !loginBusy_;
+        }
         // JOGAR COMO VISITANTE: botão escuro com borda dourada
         {
-            const float y = 606.0f * u + (1.0f - k2) * 30.0f * u, aa = a * k2;
+            const float y = 684.0f * u + (1.0f - k2) * 30.0f * u, aa = a * k2;
             const bool press = pressed_ == HitLoginGuest;
             const float sc = press ? 0.985f : 1.0f, ox = bw * (1.0f - sc) * 0.5f, oy = bh * (1.0f - sc) * 0.5f;
             button(bx + 4.0f * u, y + 7.0f * u, bw, bh, 0, 0, 0, 0.40f * aa, 0, 0, 0, 0, rad, 0);
@@ -588,8 +628,8 @@ void MainMenu::draw(int w, int h) {
             sprite(MS_LOGIN_GUEST, bx + (bw - s.w * ls) * 0.5f, y + (bh - s.h * ls) * 0.5f, ls, gold[0], gold[1], gold[2], aa);
             hit_[HitLoginGuest] = {bx, y, bw, bh}; hitOn_[HitLoginGuest] = aa > 0.4f && !loginBusy_;
         }
-        sprite(MS_LOGIN_NOTE, bx + 2.0f * u, 738.0f * u + 2.0f * u, 0.62f * u, 0, 0, 0, 0.5f * a * k2);
-        sprite(MS_LOGIN_NOTE, bx, 738.0f * u, 0.62f * u, cream[0], cream[1], cream[2], 0.62f * a * k2);
+        sprite(MS_LOGIN_NOTE, bx + 2.0f * u, 804.0f * u + 2.0f * u, 0.62f * u, 0, 0, 0, 0.5f * a * k2);
+        sprite(MS_LOGIN_NOTE, bx, 804.0f * u, 0.62f * u, cream[0], cream[1], cream[2], 0.62f * a * k2);
         // estado: conectando (pulsa) ou o erro
         int msgId = -1; float mr = 1.0f, mg = 0.48f, mb = 0.40f, ma = 1.0f;
         if (loginBusy_) { msgId = MS_LOGIN_BUSY; mr = gold[0]; mg = gold[1]; mb = gold[2]; ma = 0.6f + 0.4f * std::sin(t_ * 5.0f); }
@@ -597,10 +637,14 @@ void MainMenu::draw(int w, int h) {
         else if (loginMsg_ == 2) msgId = MS_LOGIN_ERR;
         else if (loginMsg_ == 3) { msgId = MS_LOGIN_CANCEL; mr = cream[0]; mg = cream[1]; mb = cream[2]; }
         else if (loginMsg_ == 4) msgId = MS_LOGIN_NET;
+        else if (loginMsg_ == 5) msgId = MS_LOGIN_ERR_CRED;
+        else if (loginMsg_ == 6) msgId = MS_LOGIN_ERR_EMAIL;
+        else if (loginMsg_ == 7) msgId = MS_LOGIN_ERR_MANY;
+        else if (loginMsg_ == 8) msgId = MS_LOGIN_ERR_EMPTY;
         if (msgId >= 0) {
             const float fa = loginBusy_ ? 1.0f : std::min(1.0f, loginMsgT_ * 2.0f);
-            sprite(msgId, bx + 2.0f * u, 800.0f * u + 2.0f * u, 0.70f * u, 0, 0, 0, 0.6f * a * fa);
-            sprite(msgId, bx, 800.0f * u, 0.70f * u, mr, mg, mb, ma * a * fa);
+            sprite(msgId, bx + 2.0f * u, 862.0f * u + 2.0f * u, 0.70f * u, 0, 0, 0, 0.6f * a * fa);
+            sprite(msgId, bx, 862.0f * u, 0.70f * u, mr, mg, mb, ma * a * fa);
         }
         const MenuSprite& vs = kMenuSprites[MS_VERSION];
         sprite(MS_VERSION, w - 44.0f * u - vs.w * 0.8f * u, h - 74.0f * u, 0.8f * u, cream[0], cream[1], cream[2], 0.55f * a);
@@ -632,7 +676,7 @@ void MainMenu::draw(int w, int h) {
             glUniform1i(uMode_, 3); glUniform4f(uColor_, 0.95f, 0.74f, 0.32f, 0.35f * a);
             quad(left, y + rowH - 2.0f * u, 1100.0f * u, 2.0f * u);
             if (i == 4) {   // CONTA: tipo da conta ao lado do SAIR DA CONTA
-                const int accId = account == 2 ? (int)MS_ACC_GOOGLE : (int)MS_ACC_GUEST;
+                const int accId = account == 2 ? (int)MS_ACC_GOOGLE : account == 3 ? (int)MS_ACC_EMAIL : (int)MS_ACC_GUEST;
                 const float ax = vx + kMenuSprites[MS_V_LOGOUT].w * ls + 40.0f * u;
                 if (account == 2) sprite(MS_G_LOGO, ax, y + 6.0f * u, 0.30f * u, 1, 1, 1, a);
                 sprite(accId, ax + (account == 2 ? 48.0f * u : 0.0f) + 2.0f * u, y + 13.0f * u, 0.62f * u, 0, 0, 0, 0.7f * a);
@@ -695,11 +739,14 @@ void MainMenu::activate(int hit) {
         case HitSetFilter: opts.grade = (opts.grade + 1) % 3; optsDirty = true; break;
         case HitSetSound: opts.sound = !opts.sound; optsDirty = true; break;
         case HitSetServer:
-            if (!inputOpen_ && jniShowInput(act_, "Endereço do servidor", opts.server, "Ex.: 192.168.0.10 (vazio = padrão)")) inputOpen_ = true;
+            if (!inputOpen_ && jniShowInput(act_, "Endereço do servidor", opts.server, "Ex.: 192.168.0.10 (vazio = padrão)")) { inputOpen_ = true; inputKind_ = 0; }
             break;
         case HitSetBack: goPage(PageMain, page_ == PageCredits ? HitCredits : HitSettings); break;
         case HitLoginGoogle: if (!loginBusy_) loginGoogleNow_ = true; break;
         case HitLoginGuest: if (!loginBusy_) loginGuestNow_ = true; break;
+        case HitLoginEmail:
+            if (!loginBusy_ && !inputOpen_ && jniShowInputMode(act_, "E-mail", "", "seu e-mail", 1)) { inputOpen_ = true; inputKind_ = 1; loginMsg_ = 0; }
+            break;
         case HitSetAccount: logoutNow_ = true; break;
         default: break;
     }

@@ -64,7 +64,7 @@ void Auth::init(ANativeActivity* a, const std::string& dataDir) {
     cloud_ = env->CallStaticBooleanMethod(cls, m, act) == JNI_TRUE;
     if (j.failed("Auth.init")) { env->DeleteGlobalRef(cls); cloud_ = false; return; }
     cls_ = cls;
-    LOG("conta: %s | Firebase %s", signedIn() ? (acc_.provider == Google ? "GOOGLE" : "VISITANTE") : "nenhuma", cloud_ ? "CONFIGURADO" : "nao configurado (visitante local, Google desativado)");
+    LOG("conta: %s | Firebase %s", signedIn() ? (acc_.provider == Google ? "GOOGLE" : acc_.provider == Email ? "E-MAIL" : "VISITANTE") : "nenhuma", cloud_ ? "CONFIGURADO" : "nao configurado (visitante local, Google desativado)");
     if (cloud_ && signedIn() && acc_.cloud) refreshToken();   // sessão do Firebase continua válida: pega um token novo
 }
 
@@ -93,6 +93,20 @@ void Auth::signInGuest() {
     call("signInGuest");
 }
 
+void Auth::signInEmail(const std::string& email, const std::string& pass) {
+    if (!cloud_ || !cls_ || !act_) { pendingFail_ = FailNotConfigured; return; }
+    Jni j(act_->vm);
+    JNIEnv* env = j.env;
+    if (!env) return;
+    jmethodID m = env->GetStaticMethodID((jclass)cls_, "signInEmail", "(Ljava/lang/String;Ljava/lang/String;)V");
+    if (j.failed("signInEmail id") || !m) { pendingFail_ = FailError; return; }
+    jstring je = env->NewStringUTF(email.c_str()), jp = env->NewStringUTF(pass.c_str());
+    env->CallStaticVoidMethod((jclass)cls_, m, je, jp);
+    j.failed("signInEmail");
+    env->DeleteLocalRef(je); env->DeleteLocalRef(jp);
+    LOG("login por e-mail pedido");   // nunca registra o e-mail nem a senha
+}
+
 void Auth::refreshToken() { if (cloud_) call("refreshToken"); }
 
 void Auth::signOut() {
@@ -114,6 +128,7 @@ void Auth::makeLocalGuest() {
 Auth::Result Auth::poll(Fail& fail) {
     fail = FailNone;
     if (pendingGuest_) { pendingGuest_ = false; return SignedIn; }
+    if (pendingFail_ != FailNone) { fail = pendingFail_; pendingFail_ = FailNone; return Failed; }
     if (!cls_ || !act_) return Nothing;
     Jni j(act_->vm);
     JNIEnv* env = j.env;
@@ -132,17 +147,18 @@ Auth::Result Auth::poll(Fail& fail) {
     if (f.size() >= 6 && f[0] == "OK") {
         if (!acc_.cloud && acc_.provider == Guest && acc_.uid.rfind("local-", 0) == 0) prevLocal_ = acc_.uid;   // era visitante LOCAL: o servidor migra os dados 1 vez
         acc_ = Account{};
-        acc_.provider = f[1] == "google" ? Google : Guest;
+        acc_.provider = f[1] == "google" ? Google : f[1] == "email" ? Email : Guest;
         acc_.cloud = true; acc_.uid = clean(f[2]); acc_.name = clean(f[3]); acc_.email = clean(f[4]);
-        if (acc_.name.empty()) acc_.name = acc_.provider == Google ? "PIRATA" : "VISITANTE";
+        if (acc_.name.empty() && acc_.provider != Email) acc_.name = acc_.provider == Google ? "PIRATA" : "VISITANTE";   // e-mail sem nome: a tripulação usa "PIRATA XXXX"
         token_ = f[5];
         save();
-        LOG("entrou: %s uid %s", acc_.provider == Google ? "GOOGLE" : "VISITANTE", acc_.uid.c_str());
+        LOG("entrou: %s uid %s", acc_.provider == Google ? "GOOGLE" : acc_.provider == Email ? "E-MAIL" : "VISITANTE", acc_.uid.c_str());
         return SignedIn;
     }
     if (f.size() >= 3 && f[0] == "FAIL") {
         const std::string& r = f[2];
-        fail = r == "NAO_CONFIGURADO" ? FailNotConfigured : r == "CANCELADO" ? FailCanceled : r == "SEM_INTERNET" ? FailNetwork : FailError;
+        fail = r == "NAO_CONFIGURADO" ? FailNotConfigured : r == "CANCELADO" ? FailCanceled : r == "SEM_INTERNET" ? FailNetwork
+             : r == "CREDENCIAL" ? FailCredential : r == "EMAIL_INVALIDO" ? FailEmailInvalid : r == "MUITAS_TENTATIVAS" ? FailTooMany : FailError;
         LOG("falhou (%s): %s", f[1].c_str(), r.c_str());
         if (f[1] == "guest" && fail != FailCanceled) { makeLocalGuest(); return SignedIn; }   // visitante nunca fica preso: cai no local
         return Failed;
@@ -163,7 +179,7 @@ void Auth::load() {
         const size_t eq = l.find('=');
         if (eq == std::string::npos) continue;
         const std::string k = l.substr(0, eq), v = l.substr(eq + 1);
-        if (k == "provider") acc_.provider = v == "google" ? Google : (v == "guest" ? Guest : None);
+        if (k == "provider") acc_.provider = v == "google" ? Google : v == "email" ? Email : (v == "guest" ? Guest : None);
         else if (k == "cloud") acc_.cloud = v == "1";
         else if (k == "uid") acc_.uid = v;
         else if (k == "prevlocal") prevLocal_ = v;
@@ -180,7 +196,7 @@ void Auth::save() const {
     const std::string tmp = path_ + ".tmp";
     FILE* fp = std::fopen(tmp.c_str(), "w");
     if (!fp) return;
-    std::fprintf(fp, "provider=%s\ncloud=%d\nuid=%s\nname=%s\nemail=%s\n", acc_.provider == Google ? "google" : "guest", acc_.cloud ? 1 : 0,
+    std::fprintf(fp, "provider=%s\ncloud=%d\nuid=%s\nname=%s\nemail=%s\n", acc_.provider == Google ? "google" : acc_.provider == Email ? "email" : "guest", acc_.cloud ? 1 : 0,
                  acc_.uid.c_str(), acc_.name.c_str(), acc_.email.c_str());
     if (!prevLocal_.empty()) std::fprintf(fp, "prevlocal=%s\n", prevLocal_.c_str());
     std::fclose(fp);

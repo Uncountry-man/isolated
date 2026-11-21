@@ -23,7 +23,12 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
@@ -38,6 +43,9 @@ import java.util.concurrent.Executor;
  *    Se o jogador já era VISITANTE (conta anônima do Firebase), a conta anônima é LIGADA à do Google (linkWithCredential): o uid
  *    continua o mesmo e nada se perde. Se aquele Google já tinha conta no jogo, entra nela.
  *  - Visitante: FirebaseAuth.signInAnonymously.
+ *  - E-mail e senha: FirebaseAuth.signInWithEmailAndPassword (contas criadas fora do app, ex. a conta de revisão da Play). Se o jogador era
+ *    VISITANTE do Firebase, tenta primeiro LIGAR o e-mail à conta anônima (mesmo uid, nada se perde); se o e-mail já tem conta (ou o
+ *    Firebase recusa a ligação), entra direto nela com signInWithEmailAndPassword (que confere a senha).
  * Resultado: Auth.push("OK", provedor, uid, nome, email, idToken) ou Auth.push("FAIL", provedor, motivo).
  */
 final class AuthFirebase {
@@ -125,6 +133,39 @@ final class AuthFirebase {
             });
         } else {
             auth.signInWithCredential(cred).addOnCompleteListener(a, plain);
+        }
+    }
+
+    private static String emailReason(Exception e) {
+        if (e instanceof FirebaseNetworkException) return "SEM_INTERNET";
+        if (e instanceof FirebaseTooManyRequestsException) return "MUITAS_TENTATIVAS";
+        if (e instanceof FirebaseAuthInvalidCredentialsException) {
+            String code = ((FirebaseAuthException) e).getErrorCode();
+            return "ERROR_INVALID_EMAIL".equals(code) ? "EMAIL_INVALIDO" : "CREDENCIAL";
+        }
+        if (e instanceof FirebaseAuthInvalidUserException) return "CREDENCIAL";   // e-mail sem conta / desativada (não diz qual, de propósito)
+        return "ERRO:" + (e == null ? "?" : e.getClass().getSimpleName());
+    }
+
+    static void signInEmail(final Activity a, final String email, final String pass) {
+        final FirebaseAuth auth = FirebaseAuth.getInstance();
+        final FirebaseUser cur = auth.getCurrentUser();
+        final OnCompleteListener<AuthResult> plain = new OnCompleteListener<AuthResult>() {
+            @Override public void onComplete(@NonNull Task<AuthResult> t) {
+                if (t.isSuccessful()) finish("email", auth.getCurrentUser());
+                else Auth.push("FAIL", "email", emailReason(t.getException()));
+            }
+        };
+        if (cur != null && cur.isAnonymous()) {
+            cur.linkWithCredential(EmailAuthProvider.getCredential(email, pass)).addOnCompleteListener(a, new OnCompleteListener<AuthResult>() {
+                @Override public void onComplete(@NonNull Task<AuthResult> t) {
+                    if (t.isSuccessful()) finish("email", auth.getCurrentUser());
+                    else if (t.getException() instanceof FirebaseNetworkException) Auth.push("FAIL", "email", "SEM_INTERNET");
+                    else auth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(a, plain);   // e-mail já tem conta: entra nela
+                }
+            });
+        } else {
+            auth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(a, plain);
         }
     }
 

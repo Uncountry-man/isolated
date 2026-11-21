@@ -13,7 +13,7 @@
 <h2>2. Dados que coletamos</h2>
 <table>
 <tr><th>Dado</th><th>Quando</th><th>Para quê</th></tr>
-<tr><td>Identificador da conta (uid do Firebase) e, se você entrar com Google, nome e e-mail da conta</td><td>Ao entrar com Google</td><td>Identificar você e salvar seu progresso</td></tr>
+<tr><td>Identificador da conta (uid do Firebase) e, se você entrar com Google, nome e e-mail da conta; se você entrar com e-mail e senha, o e-mail. O login por e-mail e senha é feito pelo Firebase Authentication: a senha é tratada pelo Google/Firebase e o desenvolvedor não a recebe em texto (nem a guarda no aparelho ou no servidor do jogo)</td><td>Ao entrar com Google ou com e-mail e senha</td><td>Identificar você e salvar seu progresso</td></tr>
 <tr><td>Identificador de visitante gerado no aparelho</td><td>Ao jogar como visitante</td><td>Salvar o progresso do visitante no servidor</td></tr>
 <tr><td>Progresso do jogo: moedas, inventário, vida, fome, personagem escolhido, bandeira, última posição, licenças e compras de itens virtuais</td><td>Durante o jogo</td><td>Manter seu progresso entre sessões</td></tr>
 <tr><td>Mensagens de texto do chat do jogo e do chat da tripulação, nome da tripulação</td><td>Quando você escreve</td><td>Comunicação entre jogadores. O chat da tripulação é apagado após 24 horas.</td></tr>
@@ -26,7 +26,7 @@
 
 <h2>3. Com quem compartilhamos</h2>
 <ul>
-<li><b>Google</b> (Play Services, Login com Google, Google Play Billing, AdMob e Firebase Authentication / Cloud Messaging): login, compras, anúncios e notificações. Veja a <a href="https://policies.google.com/privacy">Política de Privacidade do Google</a>.</li>
+<li><b>Google</b> (Play Services, Login com Google, Google Play Billing, AdMob e Firebase Authentication (Google, e-mail e senha, visitante) / Cloud Messaging): login, compras, anúncios e notificações. Veja a <a href="https://policies.google.com/privacy">Política de Privacidade do Google</a>.</li>
 <li><b>Amazon Web Services</b>: hospedagem do servidor do jogo (região de São Paulo, Brasil), onde ficam as contas e o progresso.</li>
 <li><b>Outros jogadores</b>: seu personagem, o número (id) do seu jogador, o nome e a bandeira da sua tripulação e suas mensagens de chat são visíveis a quem está perto de você no jogo ou na sua tripulação.</li>
 </ul>
@@ -39,7 +39,7 @@
 <p>As moedas são compradas pela Google Play. Os pagamentos são processados pela Google; nós não recebemos nem guardamos dados do seu cartão. Guardamos apenas o recibo da compra para entregar os itens.</p>
 
 <h2>6. Segurança</h2>
-<p>As contas do Google são verificadas no servidor por assinatura digital. Os arquivos de conta são gravados com verificação de integridade e há cópias de segurança diárias. <b>A comunicação do jogo entre o aplicativo e o servidor não é criptografada</b> (protocolo próprio sobre UDP/TCP); por isso, não escreva senhas nem dados pessoais no chat.</p>
+<p>As contas do Google e de e-mail são verificadas no servidor por assinatura digital. Os arquivos de conta são gravados com verificação de integridade e há cópias de segurança diárias. <b>A comunicação do jogo entre o aplicativo e o servidor não é criptografada</b> (protocolo próprio sobre UDP/TCP); por isso, não escreva senhas nem dados pessoais no chat.</p>
 
 <h2>7. Por quanto tempo guardamos</h2>
 <ul>

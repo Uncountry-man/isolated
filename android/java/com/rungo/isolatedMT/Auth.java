@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *   - sem Firebase: available() = false; Google responde FAIL NAO_CONFIGURADO e o C++ cria o visitante local.
  *
  * Eventos (campos separados por \u001f):
- *   OK    provedor(google|guest) uid nome email idToken
- *   FAIL  provedor motivo(NAO_CONFIGURADO | CANCELADO | SEM_INTERNET | ERRO:texto)
+ *   OK    provedor(google|guest|email) uid nome email idToken
+ *   FAIL  provedor motivo(NAO_CONFIGURADO | CANCELADO | SEM_INTERNET | CREDENCIAL | EMAIL_INVALIDO | MUITAS_TENTATIVAS | ERRO:texto)
  *   TOKEN idToken                       (resposta de refreshToken)
  */
 public final class Auth {
@@ -77,6 +77,19 @@ public final class Auth {
     public static void signInGuest() {
         if (fb == null) { push("FAIL", "guest", "NAO_CONFIGURADO"); return; }
         callFb("signInAnonymously");
+    }
+
+    /** LOGIN POR E-MAIL E SENHA (Firebase). A senha só passa por aqui até o FirebaseAuth; nunca é guardada nem registrada em log. */
+    public static void signInEmail(String email, String pass) {
+        if (fb == null) { push("FAIL", "email", "NAO_CONFIGURADO"); return; }
+        try {
+            Method m = fb.getDeclaredMethod("signInEmail", Activity.class, String.class, String.class);
+            m.setAccessible(true);
+            m.invoke(null, act, email, pass);
+        } catch (Throwable t) {
+            android.util.Log.e("Isolated.auth", "AuthFirebase.signInEmail: " + t.getClass().getSimpleName());
+            push("FAIL", "email", "ERRO:" + t.getClass().getSimpleName());
+        }
     }
 
     public static void refreshToken() { if (fb != null) callFb("refreshToken"); }

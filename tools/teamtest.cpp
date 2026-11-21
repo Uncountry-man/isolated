@@ -244,6 +244,21 @@ int main(int argc, char** argv) {
         const uint8_t r = call(local(argv[3], argv[4]), TeamChat, v, argv[5]);
         std::printf("say: resultado %d (%s)\n", r, teamResultText(r)); return r == TeamOk ? 0 : 1;
     }
+    if (argc >= 5 && std::strcmp(argv[1], "grant") == 0) {   // teamtest grant DIR_DADOS CHAVE MOEDAS (servidor PARADO): conta de REVISÃO/teste com tudo
+        persist::Store st; if (!st.open(argv[2])) return 1;   // liberado: moedas, os 4 navios, licença de tripulação, ferramentas, arma, munição e poções
+        persist::Account a; bool bad = false;
+        if (!st.loadNow(argv[3], a, &bad)) { std::fprintf(stderr, "conta %s nao encontrada\n", argv[3]); st.close(); return 1; }
+        using namespace item;
+        a.coins = std::atoi(argv[4]); a.ships = 0x0F; a.teamLicense = 1; a.health = 100; a.hunger = 100;
+        invClear(a.inv);   // ~29 kg de 40: ainda dá para coletar
+        const uint8_t hot[5] = {Dagger, Hatchet, Pickaxe, Torch, Gun};
+        for (int i = 0; i < 5; ++i) { a.inv[kInvHotFirst + i].id = hot[i]; a.inv[kInvHotFirst + i].n = 1; }
+        const InvSlot bag[7] = {{Ammo, 30}, {PotHeal, 10}, {PotFull, 10}, {PotSpeed, 10}, {PotShield, 10}, {Coconut, 10}, {Rope, 10}};
+        for (int i = 0; i < 7; ++i) a.inv[i] = bag[i];
+        invSanitize(a.inv);
+        persist::writeAtomic(st.pathOf(argv[3]), a.serialize(), true); st.close();
+        std::printf("%s: %d moedas, navios 0x%X, licenca %d, %.1f kg\n", argv[3], (int)a.coins, a.ships, a.teamLicense, invWeight(a.inv)); return 0;
+    }
     if (argc >= 5 && std::strcmp(argv[1], "coins") == 0) {   // teamtest coins DIR_DADOS CHAVE N (servidor PARADO): põe N moedas na conta (testes no aparelho)
         persist::Store st; if (!st.open(argv[2])) return 1;
         persist::Account a; bool bad = false;

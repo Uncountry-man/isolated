@@ -2611,7 +2611,7 @@ struct Engine {
             menuActive = true;
             menu.account = auth.signedIn() ? (int)auth.account().provider : 0;
             if (!auth.signedIn()) { menu.showLogin(); LOG("tela de login aberta (sem conta salva)"); }   // LOGIN antes do menu
-            else LOG("menu principal aberto (conta %s)", auth.account().provider == Auth::Google ? "GOOGLE" : "VISITANTE");
+            else LOG("menu principal aberto (conta %s)", auth.account().provider == Auth::Google ? "GOOGLE" : auth.account().provider == Auth::Email ? "E-MAIL" : "VISITANTE");
             return;
         }
         LOG("menu indisponivel: seguindo direto para o jogo");
@@ -2674,12 +2674,19 @@ struct Engine {
             Auth::Fail f;
             const Auth::Result r = auth.poll(f);
             if (r == Auth::SignedIn) { menu.account = (int)auth.account().provider; if (menu.onLogin()) menu.loginDone(); }
-            else if (r == Auth::Failed) menu.loginMessage(f == Auth::FailNotConfigured ? 1 : f == Auth::FailCanceled ? 3 : f == Auth::FailNetwork ? 4 : 2);
+            else if (r == Auth::Failed) menu.loginMessage(f == Auth::FailNotConfigured ? 1 : f == Auth::FailCanceled ? 3 : f == Auth::FailNetwork ? 4
+                                                          : f == Auth::FailCredential ? 5 : f == Auth::FailEmailInvalid ? 6 : f == Auth::FailTooMany ? 7 : 2);
         }
         switch (menu.poll()) {
             case MainMenu::Action::Play: leaveMenu(); break;
             case MainMenu::Action::LoginGoogle: menu.loginBusy(true); auth.signInGoogle(); break;
             case MainMenu::Action::LoginGuest: menu.loginBusy(true); auth.signInGuest(); break;
+            case MainMenu::Action::LoginEmail: {   // e-mail e senha digitados nas caixas do Android: a senha vai direto ao Firebase e é apagada aqui
+                std::string em, pw;
+                if (menu.takeEmailLogin(em, pw)) { menu.loginBusy(true); auth.signInEmail(em, pw); }
+                for (char& c : pw) c = 0;
+                break;
+            }
             case MainMenu::Action::Logout: auth.signOut(); menu.account = 0; menu.showLogin(); break;
             case MainMenu::Action::Character: openCharScreen(); break;
             case MainMenu::Action::Team: openTeam(); break;

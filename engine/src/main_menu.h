@@ -18,7 +18,7 @@ class MainMenu {
 public:
     // Character = abrir a tela PERSONAGEM (o motor desenha por cima; o menu fica parado). LoginGoogle/LoginGuest = botões da TELA DE LOGIN;
     // Logout = SAIR DA CONTA nas configurações (o motor cuida da conta em Auth e chama showLogin/loginDone/loginMessage).
-    enum class Action { None, Play, Quit, Character, LoginGoogle, LoginGuest, Logout, Team };   // Team = tela TRIPULAÇÃO (o motor desenha por cima)
+    enum class Action { None, Play, Quit, Character, LoginGoogle, LoginGuest, Logout, Team, LoginEmail };   // LoginEmail: takeEmailLogin() dá e-mail e senha   // Team = tela TRIPULAÇÃO (o motor desenha por cima)
     struct Options {
         int quality = -1;      // -1 AUTO, 0..2 fixa
         int grade = 1;         // 0 OFF, 1 SUAVE, 2 FORTE
@@ -53,9 +53,12 @@ public:
     void showLogin() { goPage(PageLogin, HitLoginGoogle); loginBusy_ = false; loginMsg_ = 0; }
     bool onLogin() const { return page_ == PageLogin; }
     void loginBusy(bool b) { loginBusy_ = b; if (b) loginMsg_ = 0; }
-    void loginMessage(int m) { loginMsg_ = m; loginMsgT_ = 5.0f; loginBusy_ = false; }   // 1 Google não configurado, 2 erro, 3 cancelado, 4 sem internet
+    void loginMessage(int m) { loginMsg_ = m; loginMsgT_ = 5.0f; loginBusy_ = false; }   // 1 Google não configurado, 2 erro, 3 cancelado, 4 sem internet,
+                                                                                         // 5 e-mail/senha incorretos, 6 e-mail inválido, 7 muitas tentativas, 8 faltou e-mail/senha
+    // LOGIN POR E-MAIL: depois de Action::LoginEmail, entrega e-mail e senha UMA vez e apaga a cópia do menu (a senha não fica guardada).
+    bool takeEmailLogin(std::string& email, std::string& pass) { if (loginEmail_.empty()) return false; email.swap(loginEmail_); pass.swap(loginPass_); wipe(loginEmail_); wipe(loginPass_); return true; }
     void loginDone() { loginBusy_ = false; loginMsg_ = 0; goPage(PageMain, HitPlay); }
-    int account = 0;               // conta em uso (o motor preenche): 0 nenhuma, 1 visitante, 2 Google
+    int account = 0;               // conta em uso (o motor preenche): 0 nenhuma, 1 visitante, 2 Google, 3 e-mail
     Options opts;                  // o motor preenche antes de abrir e lê quando optsDirty
     bool optsDirty = false;
 
@@ -63,7 +66,7 @@ private:
     struct Rect { float x = 0, y = 0, w = 0, h = 0; bool has(float px, float py) const { return px >= x && px <= x + w && py >= y && py <= y + h; } };
     enum Page { PageMain, PageSettings, PageCredits, PageLogin };
     enum Hit { HitNone = -1, HitPlay = 0, HitInvite, HitSettings, HitCredits, HitQuit, HitSocial0 = 5, HitSocial1, HitSocial2, HitSocial3, HitCharacter = 9,
-               HitSetQuality = 10, HitSetFilter, HitSetSound, HitSetServer, HitSetBack, HitLoginGoogle = 15, HitLoginGuest, HitSetAccount, HitTeam = 18, HitCount = 20 };
+               HitSetQuality = 10, HitSetFilter, HitSetSound, HitSetServer, HitSetBack, HitLoginGoogle = 15, HitLoginGuest, HitSetAccount, HitTeam = 18, HitLoginEmail = 19, HitCount = 20 };
 
     // Sondagem do servidor: conecta no TCP (o mesmo que baixa o mundo) a cada ~4 s numa thread e mede o tempo. Não bloqueia o desenho.
     struct Probe {
@@ -93,7 +96,11 @@ private:
 
     float t_ = 0, pageT_ = 1.0f, soonT_ = 0, badT_ = 0, leaveT_ = 0;
     int soonIdx_ = 0;              // ícone que mostrou o aviso "EM BREVE"
-    bool inputOpen_ = false;       // caixa de texto do endereço do servidor aberta (Java)
+    bool inputOpen_ = false;       // caixa de texto aberta (Java)
+    int inputKind_ = 0;            // 0 endereço do servidor, 1 e-mail do login, 2 senha do login
+    bool loginEmailNow_ = false;
+    std::string loginEmail_, loginPass_;   // só entre a caixa da senha e takeEmailLogin()
+    static void wipe(std::string& s) { for (char& c : s) c = 0; s.clear(); }
     int page_ = PageMain;
     bool leaving_ = false, quitNow_ = false;
     int sel_ = HitPlay, pressed_ = HitNone;

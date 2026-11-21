@@ -166,6 +166,12 @@ sprites.append(("G_LOGO", Image.open(io.BytesIO(_g)).convert("RGBA")))   # logo 
 for n in ("discord", "youtube", "instagram", "tiktok"):
     sprites.append(("ICON_" + n.upper(), svg_icon(f"tools/icon/social/{n}.svg", 128)))
 sprites.append(("CREW", text_sprite("TRIPULAÇÃO", F, spacing=8)))   # item do menu principal (tela da TRIPULAÇÃO, engine_team.inc)
+# ---- LOGIN POR E-MAIL E SENHA (Firebase; conta de revisão da Play) ----
+sprites.append(("LOGIN_EMAIL", text_sprite("ENTRAR COM E-MAIL", FL, spacing=5)))
+sprites.append(("ACC_EMAIL", text_sprite("CONTA E-MAIL", FM, spacing=5)))
+for key, txt in [("LOGIN_ERR_CRED", "E-MAIL OU SENHA INCORRETOS"), ("LOGIN_ERR_EMAIL", "E-MAIL INVÁLIDO"),
+                 ("LOGIN_ERR_MANY", "MUITAS TENTATIVAS. ESPERE UM POUCO"), ("LOGIN_ERR_EMPTY", "DIGITE O E-MAIL E A SENHA")]:
+    sprites.append((key, text_sprite(txt, FN, spacing=4)))
 
 # ---- empacota (prateleiras) com 2 px de folga ----
 GAP = 2
